@@ -64,7 +64,11 @@ lines(x,mean.x+2*SD.x,col='red',lwd=3)
 
 # Comparing quantiles to determine if the old method is fit to our data.
 fl <- clean_df$femur
-z.fl <- (fl-mean(fl))/sd(fl)
+mean_femur = -38.77 + 4.2294*clean_df$pregweek - 0.03487*clean_df$pregweek^2
+SD_femur = -5.887 - 0.2389*clean_df$pregweek + 
+ 0.003027*clean_df$pregweek^2 + 4.063*log(clean_df$pregweek)
+
+z.fl <- (fl-mean_femur)/SD_femur
 below.3 <- (z.fl < qnorm(0.03))
 round(mean(below.3),3)
 below.5 <- (z.fl < qnorm(0.05))
@@ -82,11 +86,24 @@ abline(h=0,col='red',lwd=2)
 abline(h=qnorm(c(0.03,0.05,0.10,0.95,0.975)),col='blue',lwd=2)
 
 
-#mean_femur = -38.77 + 4.2294*clean_df$pregweek - 0.03487*clean_df$pregweek^2
-#SD_femur = -5.887 - 0.2389*clean_df$pregweek + 
-#0.003027*clean_df$pregweek^2 + 4.063*log(clean_df$pregweek)
+# Checking assumption of normal distribution to our data
+
+filter_week15 <- clean_df %>% filter(pregweek >=15& pregweek< 16)
+hist(filter_week15$femur, breaks= 25, xlim= c(10,25), xlab = "length femur Week 15", 
+     ylab = "Frequency", main = "")
+
+filter_week20 <- clean_df %>% filter(pregweek >=20& pregweek< 21)
+hist(filter_week20$femur, breaks= 25,xlim= c(20,50), xlab = "length femur Week 20", 
+     ylab = "Frequency", main = "")
+                                                                                 
+filter_week30 <- clean_df %>% filter(pregweek >=30& pregweek< 31)
+hist(filter_week30$femur, breaks= 25, xlim= c(40,70), xlab = "length femur Week 30", 
+     ylab = "Frequency", main = "")
+
+filter_week40 <- clean_df %>% filter(pregweek >=40& pregweek< 41)
+hist(filter_week40$femur, breaks= 25, xlim= c(65,80), xlab = "length femur Week 40", 
+     ylab = "Frequency", main = "")
 
 
                                                                                  
-                                                                                 
-                                               
+                                                                                           
