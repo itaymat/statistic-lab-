@@ -1,0 +1,24 @@
+library(tidyverse)
+library(ggplot2)
+df <- read.csv("C:/Users/itaym/Desktop/lab/rawdata.csv")
+clean_df <- select(df,mom_date, check_date, preg_num, technician, femur, femur_w, snumber, pregweek, year, pregage_days, check_d_sas, expected)
+
+hist_week <- ggplot(clean_df, aes(x=pregweek)) +
+  geom_histogram(binwidth = 1, fill= "blue", color ="black", alpha= 0.5)+
+  theme_minimal()+
+  labs(title= "Histogram by Week", x= "Week", y= "Checks")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_x_continuous(breaks = seq(14, 44, by=3))
+
+
+clean_preg_num <- clean_df$preg_num
+clean_preg_num <- na.omit(clean_preg_num)
+clean_preg_num <- clean_preg_num[clean_preg_num<20]
+clean_preg_num <- data.frame(clean_preg_num)
+
+
+preg_num_barplot <- ggplot(clean_preg_num, aes(x = clean_preg_num, y= ####)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Pregnancy Week", x = "Number of Pregnancies", y = "Count") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
