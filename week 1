@@ -1,24 +1,92 @@
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
+
+# Loading the Data and selecting relevant variables.
 df <- read.csv("C:/Users/itaym/Desktop/lab/rawdata.csv")
 clean_df <- select(df,mom_date, check_date, preg_num, technician, femur, femur_w, snumber, pregweek, year, pregage_days, check_d_sas, expected)
 
+# Plotting histogram of pregnancy week.
 hist_week <- ggplot(clean_df, aes(x=pregweek)) +
   geom_histogram(binwidth = 1, fill= "blue", color ="black", alpha= 0.5)+
   theme_minimal()+
   labs(title= "Histogram by Week", x= "Week", y= "Checks")+
   theme(plot.title = element_text(hjust = 0.5))+
   scale_x_continuous(breaks = seq(14, 44, by=3))
+hist_week
 
-
+#Removing NA's and oversize observations.
 clean_preg_num <- clean_df$preg_num
 clean_preg_num <- na.omit(clean_preg_num)
 clean_preg_num <- clean_preg_num[clean_preg_num<20]
-clean_preg_num <- data.frame(clean_preg_num)
+clean_preg_num <- table(clean_preg_num)
+
+# Creating barplot of pragnancy number
+#preg_num_barplot <- ggplot(clean_preg_num, aes(x = clean_preg_num, y= ####)) +
+  #geom_bar(stat = "identity", fill = "blue") +
+  #labs(title = "Pregnancy Week", x = "Number of Pregnancies", y = "Count") +
+  #theme_minimal()+
+  #theme(plot.title = element_text(hjust = 0.5))
+  
+# Removing observations with invalid femur length and extremly outliers.
+clean_df <- clean_df %>% filter(!is.na(clean_df[["femur"]]))
+clean_df <- clean_df %>% filter(femur<1000)
+clean_df <- clean_df %>% filter(!((femur<20 & pregweek>35)|(femur>50& pregweek<17)))
 
 
-preg_num_barplot <- ggplot(clean_preg_num, aes(x = clean_preg_num, y= ####)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(title = "Pregnancy Week", x = "Number of Pregnancies", y = "Count") +
-  theme_minimal()+
-  theme(plot.title = element_text(hjust = 0.5))
+# Fixing data scale (sm to mm).
+clean_df$femur <- ifelse(clean_df$femur > 1000, clean_df$femur / 100, 
+                   ifelse(clean_df$femur >= 100 & clean_df$femur <= 1000,
+                   clean_df$femur / 10, ifelse(clean_df$femur <8, 
+                   clean_df$femur * 10, clean_df$femur)))
+
+# Fixing data scale (inch to mm), finding the inch's 
+#observations with the linear regression.
+model <- lm(femur ~ pregweek, data = clean_df)
+clean_df$femur <-ifelse(clean_df$femur < clean_df$pregweek*2.23-35, 
+                        clean_df$femur*2.54, clean_df$femur)
+
+# Plotting scatter plot of femur length by week.
+femur_length_byweek<- plot(clean_df$pregweek, clean_df$femur, xlab = "Pregnancy Week", 
+     ylab = "Femur Length", main = "Femur Length")
+femur_length_byweek
+#abline(a= -35, b=2.23, col="red", lwd=3) # the coefficients was taken from lm
+
+# Creating lines that representing the mean and 2*sd far from mean
+x <- sort(unique(clean_df$pregweek))
+mean.x <- -38.77 + 4.2294*x - 0.03487*x^2
+SD.x <- -5.887 - 0.2389*x + 0.003027*x^2 + 4.063*log(x)
+femur_length_byweek
+lines(x,mean.x,col='blue',cex=0.5,pch=16,lwd=3)
+lines(x,mean.x-2*SD.x,col='red',lwd=3)
+lines(x,mean.x+2*SD.x,col='red',lwd=3)
+
+
+# Comparing quantiles to determine if the old method is fit to our data.
+fl <- clean_df$femur
+z.fl <- (fl-mean(fl))/sd(fl)
+below.3 <- (z.fl < qnorm(0.03))
+round(mean(below.3),3)
+below.5 <- (z.fl < qnorm(0.05))
+round(mean(below.5),3)
+below.10 <- (z.fl < qnorm(0.10))
+round(mean(below.10), 3)
+above.95 <- (z.fl > qnorm(0.95))
+round(mean(above.95), 4)
+above.97.5 <- (z.fl > qnorm(0.975))
+round(mean(above.97.5), 4)
+
+plot(clean_df$pregweek,z.fl, ylim = c(-5, 5), xlab = "Pregnancy Week", 
+     ylab = " Standartized Femur Length", main = "Quantiles")
+abline(h=0,col='red',lwd=2)
+abline(h=qnorm(c(0.03,0.05,0.10,0.95,0.975)),col='blue',lwd=2)
+
+
+#mean_femur = -38.77 + 4.2294*clean_df$pregweek - 0.03487*clean_df$pregweek^2
+#SD_femur = -5.887 - 0.2389*clean_df$pregweek + 
+#0.003027*clean_df$pregweek^2 + 4.063*log(clean_df$pregweek)
+
+
+                                                                                 
+                                                                                 
+                                               
